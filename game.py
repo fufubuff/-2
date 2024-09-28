@@ -4,12 +4,13 @@ import sys
 import random
 from settings import WIDTH, HEIGHT, FPS, WHITE, BLACK, PINK
 from menu import PauseMenu,MainMenu
-
+import json
 class Game:
     def __init__(self):
         pygame.init()
         self.running = True
         self.playing = False
+        self.user_id = "fufubuff"
         self.window = pygame.display.set_mode((WIDTH, HEIGHT))
         self.font_name = pygame.font.get_default_font()
         self.clock = pygame.time.Clock()
@@ -54,7 +55,8 @@ class Game:
         pygame.mixer.music.play(-1)
     def next_level(self):
         self.level += 1
-        self.frozen_chance = 10 * self.level
+        self.frozen_chance = 10 * self.level  
+        self.save_game_state()  
     def load_data(self):
         self.tiles = []
         self.tile_types = {}
@@ -116,7 +118,7 @@ class Game:
 
     # 显示返回按钮
         self.window.blit(back_button_image, back_button_rect)
-
+        self.save_game_state()  
         pygame.display.update()
 
     # 等待玩家点击返回主菜单按钮
@@ -318,7 +320,7 @@ class Game:
 
     # 绘制返回按钮
         self.window.blit(back_button_image, back_button_rect)
-
+        self.save_game_state()  
         pygame.display.update()  # 更新屏幕
 
     # 等待玩家点击返回按钮
@@ -419,9 +421,75 @@ class Game:
     # 更新显示
         pygame.display.update()
     
+    def save_game_state(self):
+        player_name = self.user_id  # 默认或从某处获取的玩家名
+        new_score = {'name': player_name, 'score': self.score}
+        high_scores = self.load_high_scores()
     
+    # 添加当前分数并重新排序，保留前十个最高分
+        high_scores.append(new_score)
+        high_scores = sorted(high_scores, key=lambda x: x['score'], reverse=True)[:10]
 
+    # 保存更新后的高分记录
+        game_data = {
+            'high_scores': high_scores
+        }
+        with open('game_state.json', 'w') as f:
+            json.dump(game_data, f, indent=4)
+    def load_high_scores(self):
+        try:
+            with open('game_state.json', 'r') as f:
+                data = json.load(f)
+            # 确保返回的是列表格式，防止文件损坏或格式不正确
+                return data.get('high_scores', [])
+        except (FileNotFoundError, json.JSONDecodeError):
+            return []  
+    def show_leaderboard(self):
+        # 加载并显示背景图片
+        background_image = pygame.image.load('rank_background1.png')
+        background_image = pygame.transform.scale(background_image, (self.window.get_width(), self.window.get_height()))
+        self.window.blit(background_image, (0, 0))
 
+        # 设置字体
+        font_title = pygame.font.SysFont('Arial', 40, bold=True)
+        font_scores = pygame.font.SysFont('Arial', 24)
+
+        # 绘制“排行榜”标题
+        title_text = font_title.render("state-of-the-art", True, pygame.Color('black'))
+        title_rect = title_text.get_rect(center=(self.window.get_width() // 2, 50))
+        self.window.blit(title_text, title_rect)
+
+        # 绘制表头
+        header_text = font_scores.render("Rank   User-ID       Score", True, pygame.Color('black'))
+        header_rect = header_text.get_rect(center=(self.window.get_width() // 2, 100))
+        self.window.blit(header_text, header_rect)
+
+        # 加载并显示高分
+        high_scores = self.load_high_scores()
+        start_y = 130
+        for index, entry in enumerate(high_scores, start=1):
+            score_text = font_scores.render(f"{index}        {entry['name']}        {entry['score']}", True, pygame.Color('black'))
+            self.window.blit(score_text, (self.window.get_width() // 2 - 100, start_y))
+            start_y += 30
+
+        # 添加返回按钮
+        back_button_image = pygame.image.load('back.png').convert_alpha()
+        back_button_image = pygame.transform.scale(back_button_image, (200, 50))
+        back_button_rect = back_button_image.get_rect(center=(self.window.get_width() // 2, self.window.get_height() - 100))
+        self.window.blit(back_button_image, back_button_rect)
+
+        pygame.display.update()  # 更新显示
+
+        # 处理事件
+        running = True
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    if back_button_rect.collidepoint(event.pos):
+                        running = False  # 退出排行榜视图
     
     def update(self):
         """更新游戏状态"""

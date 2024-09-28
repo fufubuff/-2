@@ -4,7 +4,7 @@ import sys
 class MainMenu:
     def __init__(self, game):
         self.game = game
-        self.options = ["Start Game", "Settings", "Quit"]
+        self.options = ["Start Game", "Settings", "Quit","Leaderboard"]
         self.selected_option = None
         self.font = pygame.font.SysFont('Arial', 40)
 
@@ -19,7 +19,7 @@ class MainMenu:
             "Settings": pygame.transform.scale(pygame.image.load('set.png').convert_alpha(), (200, 80)), 
             "Quit": pygame.transform.scale(pygame.image.load('quit.png').convert_alpha(), (200, 80)), 
             #"Settings": self.scale_image('set.png', 150, 60),  # 等比例缩小
-            
+            "Leaderboard": pygame.transform.scale(pygame.image.load('排行榜.png').convert_alpha(), (200, 80)) 
             #"Quit": self.scale_image('quit.png', 150, 60)  # 等比例缩小
         }
         button_spacing = 100  # 你可以根据需要调整这个值
@@ -29,7 +29,8 @@ class MainMenu:
         self.button_rects = {
         "Start Game": self.button_images["Start Game"].get_rect(center=(window_center_x, start_y)),  # 第一个按钮位于1/3处
         "Settings": self.button_images["Settings"].get_rect(center=(window_center_x, start_y + button_spacing)),  # 第二个按钮在第一个按钮下方一个间距
-        "Quit": self.button_images["Quit"].get_rect(center=(window_center_x, start_y + 2 * button_spacing))  # 第三个按钮在第二个按钮下方一个间距
+        "Quit": self.button_images["Quit"].get_rect(center=(window_center_x, start_y + 2 * button_spacing)), # 第三个按钮在第二个按钮下方一个间距
+        "Leaderboard": self.button_images["Leaderboard"].get_rect(center=(window_center_x, start_y + 3 * button_spacing)) 
         }
         # 按钮的矩形区域（用于检测鼠标点击）
     def display_rules(self):
@@ -97,6 +98,8 @@ class MainMenu:
         elif option == "Quit":
             self.game.quit_menu = QuitMenu(self.game)  # 显示退出确认页面
             self.game.quit_menu.display_quit_page()
+        elif option == "Leaderboard":
+            self.game.show_leaderboard()  
 class PauseMenu:
     def __init__(self, game):
         self.game = game
